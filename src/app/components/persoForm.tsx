@@ -1,36 +1,15 @@
-"use client";
+import { FormState } from "./types";
 
-import { Button, Input, Textarea } from "./elements";
-import toast from "react-hot-toast";
-import { supabase } from "../lib/supabaseClient";
-
-type FormData = {
-  full_name: string;
-  email: string;
-  university: string;
-  linkedin: string;
-  discord_id: string;
-  year_of_study: string;
-  phone: string;
-  national_id: string;
-  study_field: string;
-  skills: string;
-  team_name: string;
-  hypscb: string;
-  elaborate: string;
-  experience: string;
-  software: string;
-};
-
-type PersonalInfoFormProps = {
+interface PersonalInfoFormProps {
   title: string;
   isLastForm: boolean;
-  onSubmit: () => void;
-  formData: FormData;
-  setFormData: (data: FormData) => void;
+  onSubmit: () => void; 
+  formData: FormState;
+  setFormData: (newData: FormState) => void;
   teamId: number | null;
-  setTeamId: (id: number) => void;
-};
+  setTeamId: React.Dispatch<React.SetStateAction<number | null>>;
+  isSolo: boolean | null;
+}
 
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   title,
@@ -40,181 +19,194 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   setFormData,
   teamId,
   setTeamId,
+  isSolo,
 }) => {
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      let currentTeamId: number | null = teamId;
-      const isLeader = title.toLowerCase() === "team leader";
-
-      // If leader and team doesn't exist, create team first
-      if (isLeader && !currentTeamId) {
-        if (!formData.team_name.trim()) {
-          toast.error("Please enter a team name.");
-          return;
-        }
-
-        const { data: teamData, error: teamError } = await supabase
-          .from("teams")
-          .insert([{ team_name: formData.team_name }])
-          .select("id")
-          .single();
-
-        if (teamError || !teamData) {
-          console.error("Team creation error:", teamError);
-          toast.error(teamError?.message || "Failed to create team.");
-          return;
-        }
-
-        currentTeamId = teamData.id;
-        if (currentTeamId !== null) {
-            setTeamId(currentTeamId);
-          }
-                }
-
-      // Make sure we have a valid team ID before inserting member
-      if (currentTeamId === null) {
-        toast.error("Missing team ID. Please ensure the team was created.");
-        return;
-      }
-
-      const { error: memberError } = await supabase.from("members").insert([
-        {
-          team_id: currentTeamId,
-          full_name: formData.full_name,
-          email: formData.email,
-          university: formData.university,
-          linkedin_link: formData.linkedin,
-          discord_id: formData.discord_id,
-          phone_number: formData.phone,
-          national_id: formData.national_id,
-          study_field: formData.study_field,
-          year_of_study: formData.year_of_study,
-          skills: formData.skills,
-          hypscb: formData.hypscb,
-          elaborate: formData.elaborate,
-          experience: formData.experience,
-          software: formData.software
-        },
-      ]);
-
-      if (memberError) {
-        console.error("Member insert error:", memberError);
-        toast.error(memberError.message || "Failed to add member.");
-        return;
-      }
-
-      toast.success("Info submitted successfully!");
-      onSubmit();
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      toast.error("Something went wrong.");
-    }
-  };
-
   return (
-    <form
-  onSubmit={handleSubmit}
-  className="w-full max-w-3xl mx-auto space-y-4 bg-indigo-900/30 p-4 sm:p-6 rounded-xl shadow-lg"
->
+    <div className="space-y-4 bg-purple-900/80 p-10 ">
+      <h3 className="aec text-[#FFC200] text-xl font-semibold">{title}</h3>
 
-      <h2 className="aec text-2xl font-semibold text-[#FFC200] text-center">{title}</h2>
+      {/* Personal Information */}
+      <div>
+        <label className="block">Full Name</label>
+        <input
+          type="text"
+          value={formData.full_name}
+          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your full name"
+        />
+      </div>
+      <div>
+        <label className="block">Email</label>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your email"
+        />
+      </div>
+      <div>
+        <label className="block">University</label>
+        <input
+          type="text"
+          value={formData.university}
+          onChange={(e) => setFormData({ ...formData, university: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your university"
+        />
+      </div>
+      <div>
+        <label className="block">LinkedIn</label>
+        <input
+          type="text"
+          value={formData.linkedin}
+          onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your LinkedIn URL"
+        />
+      </div>
+      <div>
+        <label className="block">Discord ID</label>
+        <input
+          type="text"
+          value={formData.discord_id}
+          onChange={(e) => setFormData({ ...formData, discord_id: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your Discord ID"
+        />
+      </div>
+      <div>
+        <label className="block">Phone</label>
+        <input
+          type="text"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your phone number"
+        />
+      </div>
+      <div>
+        <label className="block">National ID</label>
+        <input
+          type="text"
+          value={formData.national_id}
+          onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your national ID"
+        />
+      </div>
+      <div>
+        <label className="block">Year of Study</label>
+        <input
+          type="text"
+          value={formData.year_of_study}
+          onChange={(e) => setFormData({ ...formData, year_of_study: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your year of study"
+        />
+      </div>
+      <div>
+        <label className="block">Study Field</label>
+        <input
+          type="text"
+          value={formData.study_field}
+          onChange={(e) => setFormData({ ...formData, study_field: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your field of study"
+        />
+      </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-      <div className="flex flex-col">
-    <label className="text-white mb-1">Full Name</label>
-    <Input name="full_name" value={formData.full_name} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
+      {/* Professional Information */}
+      <div>
+        <label className="block">Skills</label>
+        <input
+          type="text"
+          value={formData.skills}
+          onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Enter your skills"
+        />
+      </div>
 
-  <div className="flex flex-col">
-    <label className="text-white mb-1">Phone Number</label>
-    <Input name="phone" value={formData.phone} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
+      <div>
+        <label className="block">
+          Have you participated in similar competitions before?
+        </label>
+        <input
+          type="text"
+          value={formData.hypscb}
+          onChange={(e) => setFormData({ ...formData, hypscb: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Yes or No"
+        />
+      </div>
 
-  <div className="flex flex-col">
-    <label className="text-white mb-1">Email</label>
-    <Input name="email" value={formData.email} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
+      <div>
+        <label className="block">If so, please elaborate</label>
+        <textarea
+          value={formData.elaborate}
+          onChange={(e) => setFormData({ ...formData, elaborate: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Tell us more about your previous competition experience"
+          rows={3}
+        />
+      </div>
 
-  <div className="flex flex-col">
-    <label className="text-white mb-1">National ID</label>
-    <Input name="national_id" value={formData.national_id} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
+      <div>
+        <label className="block">
+          Do you have experience with hands-on building and prototyping? If yes, explain.
+        </label>
+        <textarea
+          value={formData.experience}
+          onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="Describe your building or prototyping experience"
+          rows={3}
+        />
+      </div>
 
-  <div className="flex flex-col">
-    <label className="text-white mb-1">University</label>
-    <Input name="university" value={formData.university} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
+      <div>
+        <label className="block">
+          What software or tools are you comfortable using?
+        </label>
+        <textarea
+          value={formData.software}
+          onChange={(e) => setFormData({ ...formData, software: e.target.value })}
+          className="border p-2 w-full rounded text-white"
+          placeholder="E.g., Python, C++, AutoCAD, Arduino, etc."
+          rows={3}
+        />
+      </div>
 
-  <div className="flex flex-col">
-    <label className="text-white mb-1">Study Field</label>
-    <Input name="study_field" value={formData.study_field} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
+      {/* Team Name (conditionally visible for solo participants) */}
+      {(title === "Leader" || isSolo) && (
+        <div className="form-group">
+          <label className="block font-medium">Team Name</label>
+          <input
+            type="text"
+            value={formData.team_name}
+            onChange={(e) =>
+              setFormData({ ...formData, team_name: e.target.value })
+            }
+            required
+            className="border p-2 w-full rounded text-white"
+            placeholder="Enter team name"
+          />
+        </div>
+      )}
 
-  <div className="flex flex-col">
-    <label className="text-white mb-1">Year of Study</label>
-    <Input name="year_of_study" value={formData.year_of_study} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col">
-    <label className="text-white mb-1">Skills</label>
-    <Input name="skills" value={formData.skills} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col">
-    <label className="text-white mb-1">LinkedIn</label>
-    <Input name="linkedin" value={formData.linkedin} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col">
-    <label className="text-white mb-1">Discord ID</label>
-    <Input name="discord_id" value={formData.discord_id} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col col-span-2">
-    <label className="text-white mb-1">Have you participated in similar competitions before?</label>
-    <Input name="hypscb" value={formData.hypscb} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col col-span-2">
-    <label className="text-white mb-1">If so, can you please elaborate?</label>
-    <Textarea name="elaborate" value={formData.elaborate} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col col-span-2">
-    <label className="text-white mb-1">Do you have experience with hands-on building and prototyping?</label>
-    <Textarea name="experience" value={formData.experience} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  <div className="flex flex-col col-span-2">
-    <label className="text-white mb-1">What software or tools are you comfortable using? (Programming languages, CAD, Matlab, Arduino etc)</label>
-    <Textarea name="software" value={formData.software} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
-  </div>
-
-  {title === "Team Leader" && (
-    <div className="flex flex-col col-span-2">
-      <label className="text-white mb-1">Team Name</label>
-      <Input name="team_name" value={formData.team_name} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
+      {/* Submit Button */}
+      {isLastForm && (
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="bg-[#FFC200] text-[#110038] px-4 py-2 rounded hover:bg-[#110038] hover:text-[#FFC200] font-semibold"
+        >
+          Submit
+        </button>
+      )}
     </div>
-  )}
-</div>
-
-
-      <Button type="submit" className="w-full">
-        {isLastForm ? "Submit All" : "Next"}
-      </Button>
-    </form>
   );
 };
 

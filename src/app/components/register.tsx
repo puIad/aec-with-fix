@@ -243,7 +243,7 @@ const Reg = () => {
   
         {step === "teamSize" && (
           <form onSubmit={handleTeamSizeSubmit} className="space-y-6 text-center mt-6">
-            <h2 className="text-xl font-bold">Select number of team members:</h2>
+            <h2 className="text-xl font-bold text-white">Select number of team members:</h2>
             <div className="flex justify-center gap-4">
               {[2, 3, 4].map((num) => (
                 <button

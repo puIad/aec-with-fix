@@ -1,11 +1,11 @@
 // components/ui/input.tsx
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-    return <input className="w-full p-2 " {...props} />;
+    return <input className="w-full p-2 text-white bg-transparent placeholder-white focus:outline-none focus:ring-2 focus:ring-yellow-400" {...props} />;
   }
 
 // components/ui/textarea.tsx
 export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-    return <textarea className="w-full p-2 " {...props} />;
+    return <textarea className="w-full p-2 text-white bg-transparent placeholder-white focus:outline-none focus:ring-2 focus:ring-yellow-400" {...props} />;
   }
   
 // components/ui/button.tsx

@@ -125,13 +125,14 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
 
   return (
     <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-3xl mx-auto space-y-4 bg-indigo-900/30 p-6 rounded-xl shadow-lg "
-    >
+  onSubmit={handleSubmit}
+  className="w-full max-w-3xl mx-auto space-y-4 bg-indigo-900/30 p-4 sm:p-6 rounded-xl shadow-lg"
+>
+
       <h2 className="aec text-2xl font-semibold text-[#FFC200] text-center">{title}</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div className="flex flex-col">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+      <div className="flex flex-col">
     <label className="text-white mb-1">Full Name</label>
     <Input name="full_name" value={formData.full_name} onChange={handleChange} className="border border-white px-3 py-2 rounded" />
   </div>

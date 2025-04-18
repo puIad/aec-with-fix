@@ -5,8 +5,6 @@ import PersonalInfoForm from "./persoForm";
 import { FormState } from "./types";
 import { supabase } from "../lib/supabaseClient";
 
-
-
 const initialFormState: FormState = {
   full_name: "",
   email: "",

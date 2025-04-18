@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
@@ -10,6 +10,22 @@ import { EffectCoverflow, Autoplay } from 'swiper/modules';
 const images = Array.from({ length: 22 }, (_, i) => `/image${i + 1}.jpg`);
 
 export default function Slider() {
+  const [slidesPerView, setSlidesPerView] = useState(3); // Default value for desktop
+
+  useEffect(() => {
+    // Update slidesPerView based on the window width
+    const updateSlidesPerView = () => {
+      setSlidesPerView(window.innerWidth < 768 ? 1.5 : 3);
+    };
+
+    // Call it initially and on window resize
+    updateSlidesPerView();
+    window.addEventListener('resize', updateSlidesPerView);
+
+    // Cleanup the event listener on component unmount
+    return () => window.removeEventListener('resize', updateSlidesPerView);
+  }, []);
+
   return (
     <div className="w-full h-full flex justify-center items-center px-2">
       <Swiper
@@ -17,7 +33,7 @@ export default function Slider() {
         effect="coverflow"
         grabCursor={true}
         centeredSlides={true}
-        slidesPerView={window.innerWidth < 768 ? 1.5 : 3} // More visible slides on desktop
+        slidesPerView={slidesPerView} // Use the state value here
         loop={true}
         spaceBetween={-50}
         autoplay={{ delay: 2500, disableOnInteraction: false }}

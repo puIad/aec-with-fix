@@ -64,46 +64,23 @@ const Reg = () => {
 
   const handleSoloSubmit = async (data: FormState) => {
     // Check if required fields are filled
-    if (!data.full_name || !data.email || !data.university || !data.linkedin || !data.discord_id || !data.phone || !data.national_id || !data.study_field || !data.team_name) {
+    if (
+      !data.full_name ||
+      !data.email ||
+      !data.university ||
+      !data.linkedin ||
+      !data.discord_id ||
+      !data.phone ||
+      !data.national_id ||
+      !data.study_field
+    ) {
       toast.error("Please fill in all the required fields!");
-      return;
-    }
-  
-    // Check if team already exists
-    const { data: existingTeam, error: existingTeamError } = await supabase
-      .from("teams")
-      .select("id")
-      .eq("team_name", data.team_name)
-      .single();
-    
-    if (existingTeamError && existingTeamError.code !== "PGRST116") {  // PGRST116 is the code for "no rows found"
-      toast.error("Failed to check existing team.");
-      return;
-    }
-  
-    if (existingTeam) {
-      toast.error("A team with this name already exists.");
       return;
     }
   
     toast.loading("Submitting solo data...");
     try {
-      // Insert team first
-      const { data: teamData, error: teamError } = await supabase
-        .from("teams")
-        .insert({ team_name: data.team_name })
-        .select()
-        .single();
-  
-      if (teamError || !teamData) {
-        toast.dismiss();
-        toast.error("Failed to create team.");
-        return;
-      }
-  
-      const team_id = teamData.id;
-  
-      // Insert member with team_id
+      // Insert solo member (no team)
       const { error } = await supabase.from("members").insert([{
         full_name: data.full_name,
         email: data.email,
@@ -118,7 +95,7 @@ const Reg = () => {
         elaborate: data.elaborate,
         experience: data.experience,
         software: data.software,
-        team_id, // ✅ insert this
+        // No team_id
       }]);
   
       if (error) {
@@ -135,6 +112,7 @@ const Reg = () => {
       console.error(error);
     }
   };
+  
   
   const handleFinalSubmit = async () => {
     if (formStates.length === 0) return toast.error("No team members data.");
@@ -216,8 +194,10 @@ const Reg = () => {
   
   
 
-  const sections = formStates.map((_, i) => (i === 0 ? "Leader" : `Member ${i}`));
-
+  const sections = formStates.map((_, i) =>
+    isSolo ? "Member" : i === 0 ? "Leader" : `Member ${i}`
+  );
+  
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-3xl mx-auto">

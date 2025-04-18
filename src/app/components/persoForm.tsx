@@ -180,21 +180,23 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
       </div>
 
       {/* Team Name (conditionally visible for solo participants) */}
-      {(title === "Leader" || isSolo) && (
-        <div className="form-group">
-          <label className="block font-medium">Team Name</label>
-          <input
-            type="text"
-            value={formData.team_name}
-            onChange={(e) =>
-              setFormData({ ...formData, team_name: e.target.value })
-            }
-            required
-            className="border p-2 w-full rounded text-white"
-            placeholder="Enter team name"
-          />
-        </div>
-      )}
+      {/* Team Name (only for team leaders) */}
+{title === "Leader" && (
+  <div className="form-group">
+    <label className="block font-medium">Team Name</label>
+    <input
+      type="text"
+      value={formData.team_name}
+      onChange={(e) =>
+        setFormData({ ...formData, team_name: e.target.value })
+      }
+      required
+      className="border p-2 w-full rounded text-white"
+      placeholder="Enter team name"
+    />
+  </div>
+)}
+
 
       {/* Submit Button */}
       {isLastForm && (

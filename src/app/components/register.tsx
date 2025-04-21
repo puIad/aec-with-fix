@@ -112,27 +112,37 @@ const Reg = () => {
   
   
   const handleFinalSubmit = async () => {
-    if (formStates.length === 0) return toast.error("No team members data.");
+    if (formStates.length === 0) {
+      toast.error("No team members data.");
+      return;
+    }
   
     const teamName = formStates[0].team_name;
-    if (!teamName) return toast.error("Team name is required!");
+    if (!teamName) {
+      toast.error("Team name is required!");
+      return;
+    }
   
-    // Check if required fields are filled for all members
+    // Validate all required fields
     for (const member of formStates) {
-      if (!member.full_name || !member.email || !member.university || !member.linkedin || !member.discord_id || !member.phone || !member.national_id || !member.study_field) {
-        return toast.error("Please fill in all the required fields!");
+      if (
+        !member.full_name || !member.email || !member.university || !member.linkedin ||
+        !member.discord_id || !member.phone || !member.national_id || !member.study_field
+      ) {
+        toast.error("Please fill in all the required fields!");
+        return;
       }
     }
   
-    // Check if team already exists
+    // Check if the team already exists
     const { data: existingTeam, error: existingTeamError } = await supabase
       .from("teams")
       .select("id")
       .eq("team_name", teamName)
       .single();
   
-    if (existingTeamError && existingTeamError.code !== "PGRST116") {  // PGRST116 is the code for "no rows found"
-      toast.error("Failed to check existing team.");
+    if (existingTeamError && existingTeamError.code !== "PGRST116") {
+      toast.error("Failed to check existing team. Please try again.");
       return;
     }
   
@@ -143,7 +153,7 @@ const Reg = () => {
   
     toast.loading("Submitting team data...");
   
-    // Insert the team first
+    // Create the new team
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
       .insert({ team_name: teamName })
@@ -152,8 +162,7 @@ const Reg = () => {
   
     if (teamError || !teamData) {
       toast.dismiss();
-      toast.error("Failed to create team.");
-      console.error(teamError);
+      toast.error("Failed to create team. Please try again.");
       return;
     }
   
@@ -175,7 +184,7 @@ const Reg = () => {
       elaborate: member.elaborate,
       experience: member.experience,
       software: member.software,
-      team_id, // ✅ use team_id only
+      team_id,
     }));
   
     const { error: membersError } = await supabase.from("members").insert(membersToInsert);
@@ -183,12 +192,28 @@ const Reg = () => {
     toast.dismiss();
   
     if (membersError) {
-      console.error(membersError);
-      toast.error("Failed to submit members.");
-    } else {
-      toast.success("Team registered successfully!");
+      if (membersError.code === "23505") {
+        const msg = membersError.message?.toLowerCase();
+  
+        if (msg.includes("members_email_key")) {
+          toast.error("A member with this email is already registered.");
+        } else if (msg.includes("members_discord_id_key")) {
+          toast.error("This Discord ID is already registered.");
+        } else if (msg.includes("members_national_id_key")) {
+          toast.error("This National ID is already registered.");
+        } else {
+          toast.error("Duplicate value found. Please check your entries.");
+        }
+      } else {
+        toast.error("Failed to submit members. Please try again.");
+      }
+  
+      return;
     }
+  
+    toast.success("Team registered successfully!");
   };
+  
   
   
 

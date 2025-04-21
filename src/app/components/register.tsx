@@ -63,16 +63,10 @@ const Reg = () => {
   };
 
   const handleSoloSubmit = async (data: FormState) => {
-    // Check if required fields are filled
+    // Check if required fields are filled (excluding team_name for solo)
     if (
-      !data.full_name ||
-      !data.email ||
-      !data.university ||
-      !data.linkedin ||
-      !data.discord_id ||
-      !data.phone ||
-      !data.national_id ||
-      !data.study_field
+      !data.full_name || !data.email || !data.university || !data.linkedin ||
+      !data.discord_id || !data.phone || !data.national_id || !data.study_field
     ) {
       toast.error("Please fill in all the required fields!");
       return;
@@ -80,13 +74,14 @@ const Reg = () => {
   
     toast.loading("Submitting solo data...");
     try {
-      // Insert solo member (no team)
+      // Insert member with no team
       const { error } = await supabase.from("members").insert([{
         full_name: data.full_name,
         email: data.email,
         university: data.university,
         linkedin: data.linkedin,
         discord_id: data.discord_id,
+        year_of_study: data.year_of_study,
         phone: data.phone,
         national_id: data.national_id,
         study_field: data.study_field,
@@ -95,12 +90,13 @@ const Reg = () => {
         elaborate: data.elaborate,
         experience: data.experience,
         software: data.software,
-        // No team_id
+        team_id: null, // Explicitly set to null
       }]);
   
       if (error) {
         toast.dismiss();
         toast.error("Failed to submit member.");
+        console.error("Member insert error:", error.message, error.details);
         return;
       }
   
@@ -109,9 +105,10 @@ const Reg = () => {
     } catch (error) {
       toast.dismiss();
       toast.error("Submission failed.");
-      console.error(error);
+      console.error("Unexpected error:", error);
     }
   };
+  
   
   
   const handleFinalSubmit = async () => {
@@ -164,6 +161,7 @@ const Reg = () => {
     setTeamId(team_id);
   
     const membersToInsert = formStates.map((member) => ({
+      year_of_study: member.year_of_study,
       full_name: member.full_name,
       email: member.email,
       university: member.university,

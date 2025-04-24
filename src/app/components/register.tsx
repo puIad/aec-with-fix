@@ -124,19 +124,30 @@ const Reg = () => {
     }
   
     // Validate required fields for all members
-    for (const member of formStates) {
-      if (
-        !member.full_name || !member.email || !member.university || !member.linkedin ||
-        !member.discord_id || !member.phone || !member.national_id || !member.study_field
-      ) {
-        toast.error("Please fill in all the required fields!");
-        return;
-      }
+    const missingFieldErrors = formStates
+      .map((member, index) => {
+        const missingFields = [];
+        if (!member.full_name) missingFields.push("Full Name");
+        if (!member.email) missingFields.push("Email");
+        if (!member.university) missingFields.push("University");
+        if (!member.linkedin) missingFields.push("LinkedIn");
+        if (!member.discord_id) missingFields.push("Discord ID");
+        if (!member.phone) missingFields.push("Phone");
+        if (!member.national_id) missingFields.push("National ID");
+        if (!member.study_field) missingFields.push("Study Field");
+  
+        return missingFields.length > 0
+          ? `${isSolo ? "Member" : index === 0 ? "Leader" : `Member ${index}`}: ${missingFields.join(', ')}`
+          : null;
+      })
+      .filter(Boolean);
+  
+    if (missingFieldErrors.length > 0) {
+      toast.error(`Please fill in all required fields:\n${missingFieldErrors.join('\n')}`, { duration: 8000 });
+      return;
     }
   
-  
-  
-    // Check for duplicate members (email, Discord ID, national ID)
+    // Check for duplicate members
     const emails = formStates.map(m => m.email);
     const discordIds = formStates.map(m => m.discord_id);
     const nationalIds = formStates.map(m => m.national_id);
@@ -144,7 +155,7 @@ const Reg = () => {
     const { data: duplicateMembers, error: checkError } = await supabase
       .from("members")
       .select("email, discord_id, national_id")
-      .or(`email.in.(${emails.join(',')}),discord_id.in.(${discordIds.join(',')}),national_id.in.(${nationalIds.join(',')})`);
+      .or(`email.in.(${emails.map(e => `"${e}"`).join(',')}),discord_id.in.(${discordIds.map(d => `"${d}"`).join(',')}),national_id.in.(${nationalIds.map(n => `"${n}"`).join(',')})`);
   
     if (checkError) {
       toast.error("Failed to validate members. Please try again.");
@@ -158,13 +169,12 @@ const Reg = () => {
         if (discordIds.includes(member.discord_id)) duplicates.push(`Discord ID: ${member.discord_id}`);
         if (nationalIds.includes(member.national_id)) duplicates.push(`National ID: ${member.national_id}`);
       }
-      toast.error(`Duplicate member data found:\n${duplicates.join(', ')}`);
+      toast.error(`Duplicate member data found:\n${duplicates.join('\n')}`, { duration: 8000 });
       return;
     }
   
     toast.loading("Submitting team data...");
   
-    // Create the new team
     const { data: teamData, error: teamError } = await supabase
       .from("teams")
       .insert({ team_name: teamName })
@@ -181,20 +191,7 @@ const Reg = () => {
     setTeamId(team_id);
   
     const membersToInsert = formStates.map((member) => ({
-      year_of_study: member.year_of_study,
-      full_name: member.full_name,
-      email: member.email,
-      university: member.university,
-      linkedin: member.linkedin,
-      discord_id: member.discord_id,
-      phone: member.phone,
-      national_id: member.national_id,
-      study_field: member.study_field,
-      skills: member.skills,
-      hypscb: member.hypscb,
-      elaborate: member.elaborate,
-      experience: member.experience,
-      software: member.software,
+      ...member,
       team_id,
     }));
   
@@ -209,14 +206,8 @@ const Reg = () => {
   
     toast.success("Team registered successfully!");
   };
-  
-  
-  
-  
+  const sections = formStates.map((_, idx) => isSolo ? "Participant Info" : idx === 0 ? "Team Leader Info" : `Member ${idx} Info`);
 
-  const sections = formStates.map((_, i) =>
-    isSolo ? "Member" : i === 0 ? "Leader" : `Member ${i}`
-  );
   
   return (
     <div className="min-h-screen flex items-center justify-center p-6">

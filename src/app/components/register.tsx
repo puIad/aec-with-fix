@@ -123,7 +123,7 @@ const Reg = () => {
       return;
     }
   
-    // Validate all required fields
+    // Validate required fields for all members
     for (const member of formStates) {
       if (
         !member.full_name || !member.email || !member.university || !member.linkedin ||
@@ -134,20 +134,31 @@ const Reg = () => {
       }
     }
   
-    // Check if the team already exists
-    const { data: existingTeam, error: existingTeamError } = await supabase
-      .from("teams")
-      .select("id")
-      .eq("team_name", teamName)
-      .single();
   
-    if (existingTeamError && existingTeamError.code !== "PGRST116") {
-      toast.error("Failed to check existing team. Please try again.");
+  
+    // Check for duplicate members (email, Discord ID, national ID)
+    const emails = formStates.map(m => m.email);
+    const discordIds = formStates.map(m => m.discord_id);
+    const nationalIds = formStates.map(m => m.national_id);
+  
+    const { data: duplicateMembers, error: checkError } = await supabase
+      .from("members")
+      .select("email, discord_id, national_id")
+      .or(`email.in.(${emails.join(',')}),discord_id.in.(${discordIds.join(',')}),national_id.in.(${nationalIds.join(',')})`);
+  
+    if (checkError) {
+      toast.error("Failed to validate members. Please try again.");
       return;
     }
   
-    if (existingTeam) {
-      toast.error("A team with this name already exists.");
+    if (duplicateMembers?.length > 0) {
+      const duplicates = [];
+      for (const member of duplicateMembers) {
+        if (emails.includes(member.email)) duplicates.push(`Email: ${member.email}`);
+        if (discordIds.includes(member.discord_id)) duplicates.push(`Discord ID: ${member.discord_id}`);
+        if (nationalIds.includes(member.national_id)) duplicates.push(`National ID: ${member.national_id}`);
+      }
+      toast.error(`Duplicate member data found:\n${duplicates.join(', ')}`);
       return;
     }
   
@@ -192,27 +203,13 @@ const Reg = () => {
     toast.dismiss();
   
     if (membersError) {
-      if (membersError.code === "23505") {
-        const msg = membersError.message?.toLowerCase();
-  
-        if (msg.includes("members_email_key")) {
-          toast.error("A member with this email is already registered.");
-        } else if (msg.includes("members_discord_id_key")) {
-          toast.error("This Discord ID is already registered.");
-        } else if (msg.includes("members_national_id_key")) {
-          toast.error("This National ID is already registered.");
-        } else {
-          toast.error("Duplicate value found. Please check your entries.");
-        }
-      } else {
-        toast.error("Failed to submit members. Please try again.");
-      }
-  
+      toast.error("Failed to submit members. Please try again.");
       return;
     }
   
     toast.success("Team registered successfully!");
   };
+  
   
   
   
